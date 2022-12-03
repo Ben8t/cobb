@@ -1,7 +1,6 @@
-package main
+package cobb
 
 import (
-	"fmt"
 	"strings"
 )
 
@@ -20,9 +19,4 @@ func ProcessStringField(text string) string {
 
 func (archive Archive) MakeArchiveName() string {
 	return archive.Date + "_" + ProcessStringField((archive.Roll)) + "_" + ProcessStringField((archive.Camera))
-}
-
-func main() {
-	archive := Archive{"Canon A1", "Portra 400", "202211"}
-	fmt.Println(archive.MakeArchiveName())
 }
