@@ -42,6 +42,12 @@ func (m model) Init() tea.Cmd {
 	return nil
 }
 
+func ResizeWindowFrame(m model, msg tea.WindowSizeMsg) {
+	h, v := docStyle.GetFrameSize()
+	m.list[0].SetSize(msg.Width-h, msg.Height-v)
+	m.list[1].SetSize(msg.Width-h, msg.Height-v)
+}
+
 func (m model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 	switch msg := msg.(type) {
 	case tea.KeyMsg:
@@ -62,9 +68,7 @@ func (m model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 			return m, cmd
 		}
 	case tea.WindowSizeMsg:
-		h, v := docStyle.GetFrameSize()
-		m.list[0].SetSize(msg.Width-h, msg.Height-v)
-		m.list[1].SetSize(msg.Width-h, msg.Height-v)
+		ResizeWindowFrame(m, msg)
 	}
 
 	if m.cursor != len(m.list) {
@@ -78,17 +82,10 @@ func (m model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 }
 
 func (m model) View() string {
-	//var s string
-	if m.cursor == 0 {
-		return m.list[0].View()
-		//return fmt.Sprintf("%s \n %s", indent.String("\n"+s+"\n\n", 2), m.list[0].View())
+	if m.cursor != len(m.list) {
+		return m.list[m.cursor].View()
 	}
 
-	if m.cursor == 1 {
-		// return indent.String("\n"+s+"\n\n", 2)
-		return m.list[1].View()
-		//return fmt.Sprintf("%s \n %s", m.list[1].View(), indent.String("\n"+s+"\n\n", 2))
-	}
 	return fmt.Sprintf("Program end - %s ", m.archive.MakeArchiveName())
 }
 
