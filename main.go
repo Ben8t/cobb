@@ -105,8 +105,6 @@ func main() {
 	first_list := list.New(items, list.NewDefaultDelegate(), 0, 0)
 	second_list := list.New(other_items, list.NewDefaultDelegate(), 0, 0)
 	m.list = []list.Model{first_list, second_list}
-	// m.list[0] = first_list
-	// m.list[1] = second_list
 	m.cursor = 0
 	m.list[0].Title = "Cameras"
 	m.list[1].Title = "Film Rolls"
