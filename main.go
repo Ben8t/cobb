@@ -18,6 +18,7 @@ import (
 	"os"
 
 	"github.com/charmbracelet/bubbles/list"
+	"github.com/charmbracelet/bubbles/textinput"
 	tea "github.com/charmbracelet/bubbletea"
 	"github.com/charmbracelet/lipgloss"
 )
@@ -33,9 +34,11 @@ func (i item) Description() string { return i.desc }
 func (i item) FilterValue() string { return i.title }
 
 type model struct {
-	list    []list.Model
-	cursor  int
-	archive cobb.Archive
+	list      []list.Model
+	cursor    int
+	archive   cobb.Archive
+	dateInput textinput.Model
+	firstStep bool
 }
 
 func (m model) Init() tea.Cmd {
@@ -49,6 +52,24 @@ func ResizeWindowFrame(m model, msg tea.WindowSizeMsg) {
 }
 
 func (m model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
+
+	if !m.firstStep {
+		var cmd tea.Cmd
+		switch msg := msg.(type) {
+		case tea.KeyMsg:
+			switch msg.Type {
+			case tea.KeyEnter:
+				m.archive.Date = m.dateInput.Value()
+				m.firstStep = true
+				return m, cmd
+			case tea.KeyCtrlC, tea.KeyEsc:
+				return m, tea.Quit
+			}
+
+			m.dateInput, cmd = m.dateInput.Update(msg)
+			return m, cmd
+		}
+	}
 	switch msg := msg.(type) {
 	case tea.KeyMsg:
 		if msg.String() == "ctrl+c" {
@@ -67,6 +88,12 @@ func (m model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 			m.cursor++
 			return m, cmd
 		}
+
+		// if !m.firstStep {
+		// 	var cmd tea.Cmd
+		// 	m.dateInput, cmd = m.dateInput.Update(msg)
+		// 	return m, cmd
+		// }
 	case tea.WindowSizeMsg:
 		ResizeWindowFrame(m, msg)
 	}
@@ -82,11 +109,16 @@ func (m model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 }
 
 func (m model) View() string {
+
+	if !m.firstStep {
+		return m.dateInput.View()
+	}
+
 	if m.cursor != len(m.list) {
 		return m.list[m.cursor].View()
 	}
 
-	return fmt.Sprintf("Program end - %s ", m.archive.MakeArchiveName())
+	return fmt.Sprintf("Program end - %s", m.archive.MakeArchiveName())
 }
 
 func main() {
@@ -106,9 +138,12 @@ func main() {
 	second_list := list.New(other_items, list.NewDefaultDelegate(), 0, 0)
 	m.list = []list.Model{first_list, second_list}
 	m.cursor = 0
+	m.firstStep = false
+	m.dateInput = textinput.New()
+	m.dateInput.Placeholder = "YYYYMM"
+	m.dateInput.Focus()
 	m.list[0].Title = "Cameras"
 	m.list[1].Title = "Film Rolls"
-	m.archive.Date = "202311"
 
 	p := tea.NewProgram(m)
 
